@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pipecat-ai = {version = "*", extras = ["deepgram", "groq", "cartesia", "silero", "local", "local-smart-turn-v3"]}
+python-dotenv = "*"
+loguru = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"

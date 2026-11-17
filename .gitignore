@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.DS_Store
+.idea/
+
+# per-session logs (the submission copies get added explicitly)
+logs/
