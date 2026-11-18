@@ -34,6 +34,7 @@ from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.workers.runner import WorkerRunner
 
 from interview import Interview, TagStripper, TurnDirector
+from latency_logger import LatencyLogger
 from prompts import SYSTEM_PROMPT
 
 load_dotenv(override=True)
@@ -63,7 +64,7 @@ async def main():
     # - VAD stop_secs: short silence after which smart-turn is asked "are they done?"
     # - smart-turn stop_secs: the longest silence we wait through when smart-turn says
     #   "not done yet" (thinking pauses, "um..."), before ending the turn anyway
-    vad = SileroVADAnalyzer(params=VADParams(stop_secs=float(os.getenv("VAD_STOP_SECS", "0.2"))))
+    vad = SileroVADAnalyzer(params=VADParams(stop_secs=float(os.getenv("VAD_STOP_SECS", "0.4"))))
     smart_turn = LocalSmartTurnAnalyzerV3(
         params=SmartTurnParams(stop_secs=float(os.getenv("SMART_TURN_STOP_SECS", "5")))
     )
@@ -93,7 +94,11 @@ async def main():
         ]
     )
 
-    worker = PipelineWorker(pipeline, params=PipelineParams(enable_metrics=True))
+    worker = PipelineWorker(
+        pipeline,
+        params=PipelineParams(enable_metrics=True),
+        observers=[LatencyLogger("latency.jsonl")],  # watches frames, writes one line per turn
+    )
 
     @worker.event_handler("on_pipeline_started")
     async def on_pipeline_started(worker, frame):
