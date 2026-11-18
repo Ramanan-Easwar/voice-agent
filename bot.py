@@ -1,6 +1,6 @@
 """TrainerTwin voice interview coach.
 
-Step 1: the bare cascaded pipeline. Local mic -> Deepgram STT -> Groq LLM
+Local mic -> Deepgram STT -> TurnDirector -> Groq LLM -> TagStripper
 -> Cartesia TTS -> local speakers. Wear headphones: there is no echo
 cancellation, so the agent would otherwise hear itself.
 """
@@ -11,6 +11,8 @@ import os
 from dotenv import load_dotenv
 from loguru import logger
 
+from pipecat.audio.turn.smart_turn.base_smart_turn import SmartTurnParams
+from pipecat.audio.turn.smart_turn.local_smart_turn_v3 import LocalSmartTurnAnalyzerV3
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import LLMRunFrame
@@ -25,15 +27,16 @@ from pipecat.services.cartesia.tts import CartesiaTTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.services.groq.llm import GroqLLMService
 from pipecat.transports.local.audio import LocalAudioTransport, LocalAudioTransportParams
+from pipecat.turns.user_stop.turn_analyzer_user_turn_stop_strategy import (
+    TurnAnalyzerUserTurnStopStrategy,
+)
+from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.workers.runner import WorkerRunner
 
-load_dotenv(override=True)
+from interview import Interview, TagStripper, TurnDirector
+from prompts import SYSTEM_PROMPT
 
-SYSTEM_PROMPT = (
-    "You are a friendly assistant in a voice conversation. "
-    "Your replies are spoken aloud, so keep them to one or two short sentences "
-    "and never use lists, markdown or emojis."
-)
+load_dotenv(override=True)
 
 
 async def main():
@@ -55,20 +58,38 @@ async def main():
     # user messages (using the VAD to know when a turn starts and stops), and the
     # assistant aggregator records what the bot actually said.
     context = LLMContext([{"role": "system", "content": SYSTEM_PROMPT}])
+
+    # Turn-taking has two silence settings:
+    # - VAD stop_secs: short silence after which smart-turn is asked "are they done?"
+    # - smart-turn stop_secs: the longest silence we wait through when smart-turn says
+    #   "not done yet" (thinking pauses, "um..."), before ending the turn anyway
     vad = SileroVADAnalyzer(params=VADParams(stop_secs=float(os.getenv("VAD_STOP_SECS", "0.2"))))
-    aggregators = LLMContextAggregatorPair(
-        context, user_params=LLMUserAggregatorParams(vad_analyzer=vad)
+    smart_turn = LocalSmartTurnAnalyzerV3(
+        params=SmartTurnParams(stop_secs=float(os.getenv("SMART_TURN_STOP_SECS", "5")))
     )
+    aggregators = LLMContextAggregatorPair(
+        context,
+        user_params=LLMUserAggregatorParams(
+            vad_analyzer=vad,
+            user_turn_strategies=UserTurnStrategies(
+                stop=[TurnAnalyzerUserTurnStopStrategy(turn_analyzer=smart_turn)]
+            ),
+        ),
+    )
+
+    interview = Interview()
 
     pipeline = Pipeline(
         [
-            transport.input(),
-            stt,
-            aggregators.user(),
-            llm,
-            tts,
+            transport.input(), # emits the InputAudioRawFrames
+            stt, # for TranscriptionFrames
+            aggregators.user(), # user db
+            TurnDirector(interview, context),
+            llm, # LLMTextFrames
+            TagStripper(interview),
+            tts, # TTSAudioRawFrames
             transport.output(),
-            aggregators.assistant(),
+            aggregators.assistant(), # bot  db
         ]
     )
 
@@ -76,8 +97,7 @@ async def main():
 
     @worker.event_handler("on_pipeline_started")
     async def on_pipeline_started(worker, frame):
-        # Bot speaks first: ask the LLM for an opening line
-        context.add_message({"role": "user", "content": "Say a short hello."})
+        # Bot speaks first: TurnDirector adds the OPEN note (greeting + question 1)
         await worker.queue_frames([LLMRunFrame()])
 
     runner = WorkerRunner()
