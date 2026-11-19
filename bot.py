@@ -36,6 +36,7 @@ from pipecat.workers.runner import WorkerRunner
 from interview import Interview, TagStripper, TurnDirector
 from latency_logger import LatencyLogger
 from prompts import SYSTEM_PROMPT
+from transcript_logger import TranscriptLogger
 
 load_dotenv(override=True)
 
@@ -48,7 +49,7 @@ async def main():
     stt = DeepgramSTTService(api_key=os.environ["DEEPGRAM_API_KEY"])
     llm = GroqLLMService(
         api_key=os.environ["GROQ_API_KEY"],
-        settings=GroqLLMService.Settings(model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")),
+        settings=GroqLLMService.Settings(model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")),
     )
     tts = CartesiaTTSService(
         api_key=os.environ["CARTESIA_API_KEY"],
@@ -104,6 +105,18 @@ async def main():
     async def on_pipeline_started(worker, frame):
         # Bot speaks first: TurnDirector adds the OPEN note (greeting + question 1)
         await worker.queue_frames([LLMRunFrame()])
+
+    transcript = TranscriptLogger("transcript.json")
+
+    @aggregators.user().event_handler("on_user_turn_message_added")
+    async def on_user_turn_message_added(aggregator, message):
+        transcript.add("user", message.content)
+
+    @aggregators.assistant().event_handler("on_assistant_turn_stopped")
+    async def on_assistant_turn_stopped(aggregator, message):
+        # Empty when the reply was cut off before a single word was spoken
+        if message.content:
+            transcript.add("bot", message.content, interrupted=message.interrupted)
 
     runner = WorkerRunner()
     await runner.add_workers(worker)

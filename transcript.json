@@ -1,0 +1,146 @@
+[
+  {
+    "ms": 4617,
+    "speaker": "bot",
+    "text": "Hi, thanks for joining. Tell me about a project you're proud of.",
+    "interrupted": false
+  },
+  {
+    "ms": 15824,
+    "speaker": "user",
+    "text": "So one project that I'm really proud of is the retry and recovery dashboard that I had worked on, like, a couple of months ago.",
+    "interrupted": false
+  },
+  {
+    "ms": 32078,
+    "speaker": "user",
+    "text": "So... Which basically gives an idea of how your payment stacks in voluntary churn is working, and know, where your failures are happening. And which which card is performing badly and",
+    "interrupted": false
+  },
+  {
+    "ms": 32092,
+    "speaker": "user",
+    "text": "group by payment methods gateways",
+    "interrupted": false
+  },
+  {
+    "ms": 35561,
+    "speaker": "user",
+    "text": "all that. So... Yeah, that's something that I'm really proud of.",
+    "interrupted": false
+  },
+  {
+    "ms": 39261,
+    "speaker": "bot",
+    "text": "Could you explain how you grouped the data by payment methods in the dashboard?",
+    "interrupted": false
+  },
+  {
+    "ms": 53041,
+    "speaker": "user",
+    "text": "Sure. So we use this query engine called Lens, which works on top of s threes Pretty much it's the data... It's our data lake, but all a black box for us.",
+    "interrupted": false
+  },
+  {
+    "ms": 63237,
+    "speaker": "user",
+    "text": "We have this query engine and you... Which run your regular SQL queries, but they're capped at, three or four levels of group buys.",
+    "interrupted": false
+  },
+  {
+    "ms": 71555,
+    "speaker": "user",
+    "text": "So you have your recovery rates, you have your total... Sorry, you have your recovery numbers, total incoming invoices,",
+    "interrupted": false
+  },
+  {
+    "ms": 89301,
+    "speaker": "user",
+    "text": "then you finally group it according to the payment method because we store transactions... We store the payment method at transaction level So it's just easy one to one mapping to do a group buy on.",
+    "interrupted": false
+  },
+  {
+    "ms": 93175,
+    "speaker": "bot",
+    "text": "Sounds like a solid setup. What was the hardest technical problem in it?",
+    "interrupted": false
+  },
+  {
+    "ms": 126822,
+    "speaker": "user",
+    "text": "So the hardest technical problem in it was basically okay. So accessing the data, so it was across AWS account and the data was all over the place. So what we decided to do was set up a proper cross account functionality So I had to write a custom framework where this... So Lens was sitting in AWS account a. And our app was running in AWS account. We... Since we are, like, an acquired product,",
+    "interrupted": false
+  },
+  {
+    "ms": 149417,
+    "speaker": "user",
+    "text": "So the infra was the really difficult part, but it it you know, I took some help from the infrastructure team and it was just beyond that, it was just TerraForm changes. And I... It didn't involve some level of cross account testing also, which was the technical difficulty that we had faced. But yeah. Majorly those.",
+    "interrupted": false
+  },
+  {
+    "ms": 153610,
+    "speaker": "bot",
+    "text": "That sounds like a complex integration. How did you know it was working well?",
+    "interrupted": false
+  },
+  {
+    "ms": 161862,
+    "speaker": "user",
+    "text": "How did I know it was working? Well, so yeah, that's pretty straightforward. Right? So we have a",
+    "interrupted": false
+  },
+  {
+    "ms": 162103,
+    "speaker": "user",
+    "text": "we have our sandbox accounts.",
+    "interrupted": false
+  },
+  {
+    "ms": 166642,
+    "speaker": "user",
+    "text": "So we basically seeded the invoices, transactions, and payment methods.",
+    "interrupted": false
+  },
+  {
+    "ms": 190481,
+    "speaker": "user",
+    "text": "For a particular test account and, yeah, we just, you know, made sure the dashboard is working, the group bytes are working properly and yeah. But just a heads up, though, I immediately worked on the back end side of things, and I did not work on the end side of things. So... But I designed the contract API, everything. So yeah.",
+    "interrupted": false
+  },
+  {
+    "ms": 193682,
+    "speaker": "bot",
+    "text": "That makes sense. What would you do differently now?",
+    "interrupted": false
+  },
+  {
+    "ms": 223116,
+    "speaker": "user",
+    "text": "One thing that I'd do differently is probably scope out the problem in a better way. I feel like I was working on multiple things at the same time, like, the query the back end framework, and the infra part of things. So... All these were... All these three things were running in parallel and it kind of, you know, delayed things. But is what it is. Technically, I think... I don't think there's any other major changes that we'll be needing.",
+    "interrupted": false
+  },
+  {
+    "ms": 242479,
+    "speaker": "user",
+    "text": "This project is really special to me because it involved, like, a lot of cross functional working and had to work with multiple teams and learn the know, the team's how data is formed stored across different",
+    "interrupted": false
+  },
+  {
+    "ms": 242485,
+    "speaker": "user",
+    "text": "data source.",
+    "interrupted": false
+  },
+  {
+    "ms": 245096,
+    "speaker": "user",
+    "text": "So, yeah, that's",
+    "interrupted": false
+  },
+  {
+    "ms": 263009,
+    "speaker": "bot",
+    "text": "Thanks for sharing that. You clearly demonstrated strong cross\u2011functional collaboration and a solid grasp of the technical challenges you tackled. To improve, try to quantify the impact of your work with concrete metrics or outcomes, which will make your achievements even clearer. Thank you for your time, and goodbye.",
+    "interrupted": false
+  }
+]

@@ -2,7 +2,7 @@
 export VIRTUAL_ENV := $(HOME)/.pyenv/versions/dsa
 export PIPENV_VERBOSITY := -1
 
-.PHONY: install sync clean run
+.PHONY: install sync clean run stats
 
 # Resolve the Pipfile, install, and update Pipfile.lock
 install:
@@ -18,3 +18,7 @@ clean:
 
 run:
 	pipenv run python bot.py
+
+# p50/p95 and per-stage averages from the last session's latency.jsonl
+stats:
+	pipenv run python scripts/latency_stats.py latency.jsonl
